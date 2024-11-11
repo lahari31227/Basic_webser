@@ -1,0 +1,48 @@
+pipeline{
+    agent any
+    stages{
+        stage('Checkout Code'){
+            steps{
+                //pull the code from Version control repository
+                git(
+                    branch: 'main', 
+                    url: 'https://github.com/lahari31227/Basic_webser.git'
+                )
+                
+            }
+        }
+        stage('Build Docker Image'){
+            steps{
+                script{
+                    //building a Docker image from the Dockerfile in the workspace
+                    sh 'docker build -t myapp:latest .'
+                }
+            }
+        }
+        stage('Run Docker Container'){
+            steps{
+                script{
+                    //Run the Docker container from the built image
+                    sh 'docker run -d --name myappcontainer -p 1234:80 myapp:latest'
+                }
+            }
+        }
+        stage('Verify Container'){
+            steps{
+                script{
+                    //check if container is running
+                    sh 'docker ps | grep myappcontainer'
+                }
+            }
+        }
+    }
+    post{
+        always{
+            script{
+                //cleanup container and image after the pipeline run
+                sh 'docker rm -f myappcontainer || true'
+                sh 'docker rmi myapp:latest || true'
+            }
+        }
+    }
+}
